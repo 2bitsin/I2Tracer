@@ -44,7 +44,7 @@ namespace i2t {
         bool intersect (const dvec3& ro, const dvec3& rd, Incident& in);
         bool intersect (const dvec3& ro, const dvec3& rd);
         void store_sample (unsigned x, unsigned y, vec3 sample);
-        vec3 render_sample (const dvec4& ro, const dvec4& rd, unsigned bounced);
+        vec3 render_sample (const dvec4& ro, const dvec4& rd, int bounced);
 
         void render ();
         Core& snapshot (std::uint32_t, void*, std::uint32_t, std::uint32_t);
@@ -53,6 +53,8 @@ namespace i2t {
         std::size_t g_width, g_height;
         std::unique_ptr<vec3 []> g_samples;
         SceneData scene;
+
+        int global_x, global_y;
         
         const double EPSILON = 1e-3;
 

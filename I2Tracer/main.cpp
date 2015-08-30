@@ -13,8 +13,13 @@
 
 int main (int argc, char** argv) try {
     i2t::SceneData scene;
+    //i2t::parse (scene, "scene4-ambient.test");    
+    //i2t::parse (scene, "scene4-emission.test");
+    //i2t::parse (scene, "scene4-diffuse.test");
     i2t::parse (scene, "scene4-specular.test");
+    //i2t::parse (scene, "scene5.test");
     //i2t::parse (scene, "scene6.test");
+    //i2t::parse (scene, "scene7.test");
     i2t::Core core (scene);
 
     SDL_Init (SDL_INIT_EVERYTHING);
@@ -38,6 +43,10 @@ int main (int argc, char** argv) try {
         if (SDL_PollEvent (&ev)) {
             if (ev.type == SDL_QUIT)
                 break;
+            if (ev.type == SDL_MOUSEBUTTONDOWN) {
+                std::cout << ev.button.x << ", ";
+                std::cout << ev.button.y << "\n";
+            }
             continue;
         }
         SDL_Delay (16);

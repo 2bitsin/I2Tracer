@@ -27,7 +27,7 @@ bool i2t::Core::sphere_intersect (
         auto p = dvec4 (Ro+Rd*t, 1.0);
         auto n = normalize (p - dvec4 (0.0, 0.0, 0.0, 1.0));
         n = (transpose (invT)*n);
-        ii.normal = dvec4 (normalize (dvec3 (n.xyz)),1.0);        
+        ii.normal = dvec4 (normalize (dvec3 (n.xyz)), 0.0);        
         ii.point = T*p;
         ii.t = t;
         return true;
@@ -123,6 +123,8 @@ bool i2t::Core::intersect (const dvec3& Ro, const dvec3& Rd, Incident& in) {
     for (const auto& obj: scene.triangles ()) {        
         if (!polygon_intersect (Ro, Rd, obj.v0.xyz, obj.v1.xyz, obj.v2.xyz, ti))
             continue;
+        if (ti.t <= EPSILON)
+            continue;
         if (ti.t < mint) {
             mint = ti.t;
             ti.material = obj.material;
@@ -134,6 +136,8 @@ bool i2t::Core::intersect (const dvec3& Ro, const dvec3& Rd, Incident& in) {
     for (const auto& obj: scene.spheres ()) {
         Incident ti;
         if (!sphere_intersect (Ro, Rd, obj.inverseT, obj.T, ti))
+            continue;
+        if (ti.t <= EPSILON)
             continue;
         if (ti.t < mint) {
             mint = ti.t;
@@ -163,21 +167,19 @@ void i2t::Core::store_sample (unsigned x, unsigned y, vec3 sample) {
     g_samples [x + y*scene.camera ().size.x] = sample;
 }
 
-vec3 i2t::Core::render_sample (const dvec4& Ro, const dvec4& Rd, unsigned bounces) {
+vec3 i2t::Core::render_sample (const dvec4& Ro, const dvec4& Rd, int bounces) {
     if (bounces <= 0)
-        return vec3 (1.0);
+        return vec3 (0.0);
     Incident ti;
     if (!intersect (Ro.xyz, Rd.xyz, ti))
         return vec3 (0.0);
-    
-    
-    const auto& A = scene.ambient ();
+    const auto& A = ti.material.ambient;
     const auto& E = ti.material.emission;
     const auto& D = ti.material.diffuse;
     const auto& S = ti.material.specular;
     const auto& s = ti.material.power;
     const auto& N = ti.normal;
-    auto ED = scene.camera ().eye-ti.point;
+    auto ED = scene.camera ().eye- ti.point;
     auto I = A + E;
     
     for (const auto& light: scene.lights ()) {        
@@ -187,14 +189,14 @@ vec3 i2t::Core::render_sample (const dvec4& Ro, const dvec4& Rd, unsigned bounce
             normalize (light.position - ti.point);
         auto r = float (is_directional ? 0.0f : 
             length (light.position - ti.point));
-        auto H = normalize (L + ED) ;
+        auto H = normalize (ED+L) ;
         auto V = intersect (ti.point.xyz, dvec3 (L.xyz)) ? 0.0f : 1.0f;
         const auto c = dot (light.attenuation, vec3 (1.0f, r, r*r));
-        auto spec = S*float (std::pow (std::max (dot (N, H), 0.0), s));
         auto diff = D*float (std::max (dot (N, L), 0.0));
-        I += (V*Li/c)*(diff + spec);        
+        auto spec = S*float (std::pow (std::max (dot (N, H), 0.0), s));
+        I += (V*Li/c)*(diff + spec);
     }
-    auto rRd = dvec4 (normalize (reflect (dvec3 (Rd.xyz), dvec3 (N.xyz))), 0.0);
+    auto rRd = normalize (reflect (Rd, N));
     auto rRo = ti.point;
     return I + S*render_sample (rRo, rRd, bounces-1);
 }
@@ -219,12 +221,14 @@ void i2t::Core::render () {
     auto v = normalize (cross (w, u));
 
     #pragma omp parallel for
-    for (auto y = 0; y < height; ++y)         
-    for (auto x = 0; x < width;  ++x) {
-        auto alfa = +tanfx*(x + 0.5 - halfw);
-        auto beta = -tanfy*(y + 0.5 - halfh);
+    for (auto cy = 0; cy < height; ++cy)         
+    for (auto cx = 0; cx < width;  ++cx) {
+        auto alfa = +tanfx*(cx + 0.5 - halfw);
+        auto beta = -tanfy*(cy + 0.5 - halfh);
         auto rd = dvec4 (normalize (alfa*u + beta*v - w), 0.0);        
-        store_sample (x, y, render_sample (ro, rd, scene.bounces ()));
+        global_x = cx;
+        global_y = cy;
+        store_sample (cx, cy, render_sample (ro, rd, scene.bounces ()));
     }
 }
 
@@ -242,7 +246,9 @@ i2t::Core& i2t::Core::snapshot (std::uint32_t type, void* buff, std::uint32_t w,
     for (auto y = 0u; y < g_height; ++y) 
     for (auto x = 0u; x < g_width; ++x) {
         if (x > w || y > h) continue;
-        buffer [x + y*w] = rgb32 (g_samples [x + y*g_width]);
+        auto c = g_samples [x + y*g_width];
+        //c = pow (c, vec3 (1.0/2.2));
+        buffer [x + y*w] = rgb32 (c);
     }
     
     return *this; 

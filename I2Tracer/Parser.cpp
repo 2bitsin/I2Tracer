@@ -168,9 +168,9 @@ bool i2t::parse (SceneData& out, const std::string& name) {
             attenuation.z = read<float> (in);
         }},
         {"ambient", [&] (std::istream& in) {
-            scene.$ambient.x = read<float> (in);
-            scene.$ambient.y = read<float> (in);
-            scene.$ambient.z = read<float> (in);
+            material.ambient.x = read<float> (in);
+            material.ambient.y = read<float> (in);
+            material.ambient.z = read<float> (in);
         }},
 
         /* Materials */

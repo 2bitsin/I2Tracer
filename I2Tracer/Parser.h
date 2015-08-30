@@ -10,6 +10,7 @@ namespace i2t {
     struct SceneData {
 
         struct Material {
+            vec3 ambient;
             vec3 emission;
             vec3 diffuse;
             vec3 specular;
@@ -46,7 +47,6 @@ namespace i2t {
         friend bool parse (SceneData& out, const std::string& name);
 
         auto&& camera    () const { return $camera; }
-        auto&& ambient   () const { return $ambient; }
         auto&& lights    () const { return $lights; }
         auto&& triangles () const { return $triangles; }
         auto&& spheres   () const { return $spheres; }   
@@ -64,7 +64,6 @@ namespace i2t {
             45.0f
         };
 
-        vec3                    $ambient = vec3 (0.0);
         std::vector<Light>      $lights;
         std::vector<Triangle>   $triangles;
         std::vector<Sphere>     $spheres;      
