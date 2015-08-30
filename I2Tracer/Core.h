@@ -42,7 +42,7 @@ namespace i2t {
         
 
         bool intersect (const dvec3& ro, const dvec3& rd, Incident& in);
-        bool intersect (const dvec3& ro, const dvec3& rd);
+        bool intersect (const dvec3& ro, const dvec3& rd, double tmax);
         void store_sample (unsigned x, unsigned y, vec3 sample);
         vec3 render_sample (const dvec4& ro, const dvec4& rd, int bounced);
 
@@ -56,7 +56,7 @@ namespace i2t {
 
         int global_x, global_y;
         
-        const double EPSILON = 1e-12;
+        const double EPSILON = 1e-3;
 
     };
 }

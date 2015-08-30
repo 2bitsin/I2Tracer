@@ -150,16 +150,16 @@ bool i2t::Core::intersect (const dvec3& Ro, const dvec3& Rd, Incident& in) {
     return hit;
 }
 
-bool i2t::Core::intersect (const dvec3& Ro, const dvec3& Rd) {
+bool i2t::Core::intersect (const dvec3& Ro, const dvec3& Rd, double tmax) {
     double t;
     for (const auto& obj: scene.triangles ()) {        
         if (canonical_polygon_intersect (Ro, Rd, obj.v0.xyz, obj.v1.xyz, obj.v2.xyz, t))
-            if (t > EPSILON) 
+            if (t > EPSILON && t <= tmax - EPSILON) 
                 return true;
     }
     for (const auto& obj: scene.spheres ()) {
         if (simple_sphere_intersect (Ro, Rd, obj.inverseT, obj.T, t))
-            if (t > EPSILON)
+            if (t > EPSILON && t <= tmax - EPSILON)
                 return true;
     }
     return false;
@@ -189,16 +189,15 @@ vec3 i2t::Core::render_sample (const dvec4& Ro, const dvec4& Rd, int bounces) {
     auto I = A + E;
 
     for (const auto& light: scene.lights ()) {        
-        auto is_directional = std::abs (light.position.w) < EPSILON;
+        auto is_directional = light.position.w == 0.0;
         auto Li = light.color;
-        auto L = is_directional ? normalize (light.position) : 
-            normalize (light.position - ti.point);
-        auto r = float (is_directional ? 0.0f : 
-            length (light.position - ti.point));
-        auto H = normalize (ED+L) ;
-        auto V = intersect (ti.point.xyz, dvec3 (L.xyz)) ? 0.0f : 1.0f;        
+        auto L = is_directional ? light.position : light.position - ti.point;
+        auto r = length (L);        
+        L = normalize (L);
+        auto H = normalize (ED+L) ;                
+        auto V = intersect (ti.point.xyz, dvec3 (L.xyz), r) ? 0.0f : 1.0f;        
         const auto& C = light.attenuation;
-        auto c = C [0] + C [1]*r + C [2]*r*r;
+        auto c = float (C [0] + C [1]*r + C [2]*r*r);
         auto diff = D*float (std::max (dot (N, L), 0.0));
         auto spec = S*float (std::pow (std::max (dot (N, H), 0.0), s));
         I += (V*Li/c)*(diff + spec);        
