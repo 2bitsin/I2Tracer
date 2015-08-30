@@ -1,0 +1,17 @@
+size 256 256
+camera 0 0 20 0 0 0 0 1 0 45
+output scene7.png
+maxdepth 5
+
+
+diffuse 1.0 0.0 0.0
+pushTransform
+translate 0.1 -0.1 0.0
+sphere 0 0 0 5
+popTransform
+
+diffuse 0.0 0.0 1.0
+pushTransform
+translate -0.1 0.1 0.0
+sphere 0 0 0 5
+popTransform
