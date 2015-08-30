@@ -146,7 +146,7 @@ bool i2t::parse (SceneData& out, const std::string& name) {
             auto g = read<float> (in);
             auto b = read<float> (in);
             scene.$lights.push_back ({
-                T*dvec4 (x,y,z,0.0), 
+                T*dvec4 (x, y, z, 0.0), 
                 vec3 (r,g,b),
                 attenuation});
         }},

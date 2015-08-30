@@ -56,7 +56,7 @@ namespace i2t {
 
         int global_x, global_y;
         
-        const double EPSILON = 1e-3;
+        const double EPSILON = 1e-12;
 
     };
 }

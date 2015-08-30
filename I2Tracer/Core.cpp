@@ -154,11 +154,13 @@ bool i2t::Core::intersect (const dvec3& Ro, const dvec3& Rd) {
     double t;
     for (const auto& obj: scene.triangles ()) {        
         if (canonical_polygon_intersect (Ro, Rd, obj.v0.xyz, obj.v1.xyz, obj.v2.xyz, t))
-            if (t > EPSILON) return true;
+            if (t > EPSILON) 
+                return true;
     }
     for (const auto& obj: scene.spheres ()) {
         if (simple_sphere_intersect (Ro, Rd, obj.inverseT, obj.T, t))
-            if (t > EPSILON) return true;
+            if (t > EPSILON)
+                return true;
     }
     return false;
 }
@@ -173,28 +175,33 @@ vec3 i2t::Core::render_sample (const dvec4& Ro, const dvec4& Rd, int bounces) {
     Incident ti;
     if (!intersect (Ro.xyz, Rd.xyz, ti))
         return vec3 (0.0);
+    
+
     const auto& A = ti.material.ambient;
     const auto& E = ti.material.emission;
     const auto& D = ti.material.diffuse;
     const auto& S = ti.material.specular;
     const auto& s = ti.material.power;
     const auto& N = ti.normal;
+    
+    
     auto ED = normalize (Ro - ti.point);
     auto I = A + E;
-    
+
     for (const auto& light: scene.lights ()) {        
         auto is_directional = std::abs (light.position.w) < EPSILON;
         auto Li = light.color;
-        auto L = is_directional ? light.position : 
+        auto L = is_directional ? normalize (light.position) : 
             normalize (light.position - ti.point);
         auto r = float (is_directional ? 0.0f : 
             length (light.position - ti.point));
         auto H = normalize (ED+L) ;
-        auto V = intersect (ti.point.xyz, dvec3 (L.xyz)) ? 0.0f : 1.0f;
-        const auto c = 1.0f;// dot (light.attenuation, vec3 (1.0f, r, r*r));
+        auto V = intersect (ti.point.xyz, dvec3 (L.xyz)) ? 0.0f : 1.0f;        
+        const auto& C = light.attenuation;
+        auto c = C [0] + C [1]*r + C [2]*r*r;
         auto diff = D*float (std::max (dot (N, L), 0.0));
         auto spec = S*float (std::pow (std::max (dot (N, H), 0.0), s));
-        I += (V*Li/c)*(diff + spec);
+        I += (V*Li/c)*(diff + spec);        
     }
     auto rRd = normalize (reflect (Rd, N));
     auto rRo = ti.point;

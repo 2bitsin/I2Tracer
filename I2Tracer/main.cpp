@@ -18,7 +18,8 @@ int main (int argc, char** argv) try {
     //i2t::parse (scene, "scene4-diffuse.test");
     //i2t::parse (scene, "scene4-specular.test");
     //i2t::parse (scene, "scene5.test");
-    i2t::parse (scene, "scene6.test");
+    //i2t::parse (scene, "scene6.test");
+    i2t::parse (scene, "foo.test");
     //i2t::parse (scene, "scene7.test");
 
     //i2t::parse (scene, "foo.test");
