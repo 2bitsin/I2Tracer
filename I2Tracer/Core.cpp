@@ -179,7 +179,7 @@ vec3 i2t::Core::render_sample (const dvec4& Ro, const dvec4& Rd, int bounces) {
     const auto& S = ti.material.specular;
     const auto& s = ti.material.power;
     const auto& N = ti.normal;
-    auto ED = scene.camera ().eye- ti.point;
+    auto ED = normalize (Ro - ti.point);
     auto I = A + E;
     
     for (const auto& light: scene.lights ()) {        
@@ -191,7 +191,7 @@ vec3 i2t::Core::render_sample (const dvec4& Ro, const dvec4& Rd, int bounces) {
             length (light.position - ti.point));
         auto H = normalize (ED+L) ;
         auto V = intersect (ti.point.xyz, dvec3 (L.xyz)) ? 0.0f : 1.0f;
-        const auto c = dot (light.attenuation, vec3 (1.0f, r, r*r));
+        const auto c = 1.0f;// dot (light.attenuation, vec3 (1.0f, r, r*r));
         auto diff = D*float (std::max (dot (N, L), 0.0));
         auto spec = S*float (std::pow (std::max (dot (N, H), 0.0), s));
         I += (V*Li/c)*(diff + spec);
